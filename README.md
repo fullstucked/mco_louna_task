@@ -99,7 +99,7 @@ GET /v1/payments/{payment_id}
 ## Setup & Run:
 **Clone**
 ```bash
-git clone  https://github.com/fullstucked/mco_luna/task
+git clone  https://github.com/fullstucked/mco_louna_task
 cd mco_luna_task
 mv .env.example .env
 ```
