@@ -1,0 +1,92 @@
+networks:
+  payments-network:
+    driver: bridge
+
+volumes:
+  pg_volume:
+    driver: local
+
+services:
+  postgres:
+    container_name: database
+    image: postgres:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER : ${DB_USER}
+      POSTGRES_PASSWORD : ${DB_PASSWORD}
+      POSTGRES_DB : ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - pg_volume:/var/lib/postgresql:rw
+    command: [ "postgres"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    stop_grace_period: 120s
+    networks:
+      - payments-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: broker
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${BROKER_USER}
+      RABBITMQ_DEFAULT_PASS: ${BROKER_PASS}
+    ports:
+      - "${BROKER_PORT}:5672"  
+      - "15672:15672"  # management UI
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - payments-network
+
+  api:
+    build:
+      context: .
+      dockerfile: ./src/payments/Dockerfile
+    image: payment_processing:local
+    container_name: payment_processing
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+        - .env
+    environment:
+      DATABASE_URL: ${DB_TYPE}://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      BROKER_URL:
+      API_KEY: ${API_KEY}
+    ports:
+      - "${API_PORT}:8000"
+    networks:
+      - payments-network
+
+
+  consumer:
+    image: payment_processing:local
+    container_name: payments_consumer
+    env_file:
+        - .env
+    environment:
+      DATABASE_URL: ${DB_TYPE}://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: ["sh", "-c", "uv run src/payments/consumer.py"] 
+    networks:
+      - payments-network
+    restart: unless-stopped
