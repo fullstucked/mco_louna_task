@@ -102,6 +102,6 @@ GET /v1/payments/{payment_id}
 git clone  https://github.com/fullstucked/mco_louna_task
 cd mco_luna_task
 mv .env.example .env
-```
+
 make docker
 ```
