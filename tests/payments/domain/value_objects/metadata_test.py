@@ -1,3 +1,5 @@
+from types import MappingProxyType
+
 import pytest
 
 from payments.domain.value_objects.metadata import Metadata
@@ -11,7 +13,7 @@ class TestMetadataConstruction:
         """Metadata with empty dict should construct without error."""
         metadata = Metadata(meta={})
         assert metadata.value == {}
-        assert isinstance(metadata.value, dict)
+        assert isinstance(metadata.value, MappingProxyType)
 
     def test_valid_metadata_string_keys_only(self):
         """Metadata with string keys should construct without error."""
@@ -68,7 +70,6 @@ class TestMetadataConstruction:
 
     def test_metadata_non_string_keys_raises_error(self):
         """Metadata with non-string keys should raise DomainTypeError."""
-        # Use object.__setattr__ to bypass frozen check during construction
         with pytest.raises(DomainTypeError) as exc_info:
             Metadata(meta={1: "value", 2: "another"})
 
@@ -100,11 +101,27 @@ class TestMetadataConstruction:
         )
 
     def test_metadata_value_property(self):
-        """Metadata.value should return the dict."""
+        """Metadata.value should return a dict-like MappingProxyType."""
         meta_dict = {"key": "value"}
         metadata = Metadata(meta=meta_dict)
         assert metadata.value == meta_dict
-        assert metadata.value is meta_dict
+        assert isinstance(metadata.value, MappingProxyType)
+
+    def test_metadata_empty_string_key(self):
+        """Empty string should be valid key."""
+        metadata = Metadata(meta={"": "value"})
+        assert metadata.value == {"": "value"}
+
+    def test_metadata_unicode_keys(self):
+        """Unicode keys should be valid."""
+        metadata = Metadata(meta={"名前": "Tanaka", "年齢": 30})
+        assert metadata.value == {"名前": "Tanaka", "年齢": 30}
+
+    def test_metadata_none_value_raises_error(self):
+        """Metadata(meta=None) !!!"""
+        # Currently, code will raise "Metadata must be a dictionary" TODO FIX
+        with pytest.raises(DomainTypeError):
+            Metadata(meta=None)
 
 
 class TestMetadataRebuild:
@@ -166,3 +183,27 @@ class TestMetadataRepr:
 
         # Should include class name
         assert "Metadata" in repr_str
+
+    def test_metadata_json_round_trip(self):
+        """Metadata should be JSON-serializable via dict conversion."""
+        import json
+
+        meta_dict = {"user_id": 123, "tags": ["a", "b"]}
+        metadata = Metadata(meta=meta_dict)
+
+        # Convert MappingProxyType to dict for JSON serialization
+        json_str = json.dumps(dict(metadata.value))
+        restored = json.loads(json_str)
+
+        assert restored == meta_dict
+
+    def test_metadata_json_serializable(self):
+        """Core requirement: metadata must be JSON-serializable."""
+        import json
+
+        meta_dict = {"key": "value", "nested": {"x": 1}, "array": [1, 2, 3]}
+        metadata = Metadata(meta=meta_dict)
+
+        # This should not raise
+        json_str = json.dumps(dict(metadata.value))
+        assert json.loads(json_str) == meta_dict

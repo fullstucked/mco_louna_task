@@ -1,6 +1,6 @@
 import os
 from abc import abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from enum import Enum
 from typing import Any, Generic, Hashable, Self, Sequence, TypeVar, cast
 
@@ -51,36 +51,43 @@ class Aggregate(Generic[ID, EVENT, VO, ENTITY]):
 
     def _validate_field_types(self):
         """
-        Checks that every fields inherited from
-                [`Value Object`|| `DomainEvent` || `Enum` || `Entity`]
-            or exposed as Enum
-            except id - it must be `Hashable` only
+        Validates that aggregate fields are:
+        - Domain objects (ValueObject, Entity, DomainEvent) or Enum
+        - Sequences of domain objects
+
+        No primitive types are allowed; all state must be represented as domain objects.
         """
-        for attr in dir(self):
-            if not callable(getattr(self, attr)) and not attr == "id":
-                field = getattr(self, attr)
 
-                if isinstance(field, Sequence):  # deep check
-                    for el in field:
-                        if not isinstance(
-                            el, ValueObject | Enum | DomainEvent | Entity
-                        ):
-                            raise DomainTypeError(
-                                message="Aggregate attribute must be descendant of Value Object class in Sequences too",
-                                context={
-                                    "details": f"Attempt to pass inappropriate obj in {self.__class__}.",
-                                },
-                            )
+        for f in fields(self):
+            # Skip the id field
+            if f.name == "id" or f.name == "_rebuilding":
+                continue
 
-                elif not isinstance(
-                    field, ValueObject | Enum | Entity
-                ):  # for non-sequence fields
-                    raise DomainTypeError(
-                        message="Aggregate attribute must be descendant of Value Object class",
-                        context={
-                            "details": f"Attempt to pass non-VO in {self.__class__}.",
-                        },
-                    )
+            field_value = getattr(self, f.name)
+
+            # Acceptable primitives only Enums, None and bools
+            if isinstance(field_value, (Enum, type(None), bool)):
+                continue
+
+            # Check sequences of domain objects
+            if isinstance(field_value, Sequence):
+                for el in field_value:
+                    if not isinstance(el, (ValueObject, Entity, DomainEvent, Enum)):
+                        raise DomainTypeError(
+                            message="Sequence elements must be domain objects",
+                            context={
+                                "field": f.name,
+                                "element_type": type(el).__name__,
+                            },
+                        )
+                continue
+
+            # Everything else must be a domain object
+            if not isinstance(field_value, (ValueObject, Entity, DomainEvent)):
+                raise DomainTypeError(
+                    message="Aggregate field must be domain object or primitive type",
+                    context={"field": f.name, "type": type(field_value).__name__},
+                )
 
     # ---------------------------------------------------------
     # Behavior

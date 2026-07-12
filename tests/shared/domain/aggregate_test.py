@@ -56,7 +56,7 @@ class ValidAggregate(Aggregate[UUID, TestEvent, TestVO, TestEntity]):
 class TestAggregateInstantiation:
     def test_cannot_instantiate_base_aggregate_directly(self, monkeypatch):
         """Should raise DomainTypeError when trying to instantiate Aggregate base"""
-        monkeypatch.setenv("ENV", "DEV")  # ← ADD THIS
+        monkeypatch.setenv("ENV", "DEV")
 
         with pytest.raises(DomainTypeError) as exc_info:
             Aggregate(id=uuid4())
@@ -104,9 +104,9 @@ class TestAggregateFieldValidation:
         """Should raise DomainTypeError for non-VO, non-Entity, non-Event, non-Enum fields"""
         monkeypatch.setenv("ENV", "DEV")
 
-        @dataclass(slots=True, kw_only=True)
+        @dataclass(slots=True, kw_only=True, eq=False)
         class InvalidAggregate(Aggregate[UUID, TestEvent, TestVO, TestEntity]):
-            id: UUID
+            name: TestVO
             invalid_field: str  # String is not allowed
 
             @classmethod
@@ -114,30 +114,31 @@ class TestAggregateFieldValidation:
                 return cls(id=id, **kwargs)
 
         with pytest.raises(DomainTypeError) as exc_info:
-            InvalidAggregate(id=uuid4(), invalid_field="test")
+            InvalidAggregate(id=uuid4(), name=TestVO(name="Test"), invalid_field="test")
 
-            assert (
-                "Value Object" in exc_info.value.message
-                or "descendant" in exc_info.value.message
-            )
+        assert "domain object" in exc_info.value.message.lower()
 
     def test_rejects_invalid_type_in_sequence(self, monkeypatch):
         """Should raise DomainTypeError for invalid types in Sequence fields"""
         monkeypatch.setenv("ENV", "DEV")
 
-        @dataclass(slots=True, kw_only=True)
+        @dataclass(slots=True, kw_only=True, eq=False)
         class InvalidSequenceAggregate(Aggregate[UUID, TestEvent, TestVO, TestEntity]):
-            id: UUID
-            items: list[str]  # Should be list of VO/Entity/Event/Enum
+            name: TestVO
+            items: list[str] = field(
+                default_factory=list
+            )  # Should be list of VO/Entity/Event/Enum
 
             @classmethod
             def rebuild(cls, id: UUID, events: list[TestEvent] = [], **kwargs):
                 return cls(id=id, **kwargs)
 
         with pytest.raises(DomainTypeError) as exc_info:
-            InvalidSequenceAggregate(id=uuid4(), items=["invalid"])
+            InvalidSequenceAggregate(
+                id=uuid4(), name=TestVO(name="Test"), items=["invalid"]
+            )
 
-        assert "descendant" in exc_info.value.message
+        assert "domain object" in exc_info.value.message.lower()
 
 
 class TestAggregateEquality:
@@ -160,7 +161,7 @@ class TestAggregateEquality:
         """Different aggregate types are not equal even with same id"""
         test_id = uuid4()
 
-        @dataclass(slots=True, kw_only=True)
+        @dataclass(slots=True, kw_only=True, eq=False)
         class OtherAggregate(Aggregate[UUID, TestEvent, TestVO, TestEntity]):
             name: TestVO
 
