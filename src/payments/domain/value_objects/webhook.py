@@ -36,7 +36,7 @@ class WebhookUrl(ValueObject[str]):
                 raise DomainValidationError("Webhook URL must be valid")
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         url: str,
     ) -> Self:

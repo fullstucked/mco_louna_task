@@ -39,7 +39,7 @@ class Timestamp(ValueObject[datetime]):
         return self.value.isoformat()
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         timestamp: datetime,
     ) -> Self:

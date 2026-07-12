@@ -21,6 +21,7 @@ class Description(ValueObject[str]):
 
     def __post_init__(self):
         if not self._rebuilding:
+            ValueObject.__post_init__(self)
             self._validate_lenth()
             self._validate_pattern()
 
@@ -37,18 +38,26 @@ class Description(ValueObject[str]):
         if not bool(re.match(VALID_PATTERN, self.value)):
             match = re.search(INVALID_PATTERN, self.value)
 
-            char: str = match.group()  # pyrefly: ignore [missing-attribute]
-            position = match.start()  # pyrefly: ignore [missing-attribute]
+            if match:
+                char = match.group()
+                position = match.start()
 
-            raise DomainValidationError(
-                message="Description contains invalid characters",
-                context={
-                    "details": f"Description = {self.value} contains invalid characters at pos={position}, char={char}"
-                },
-            )
+                raise DomainValidationError(
+                    message="Description contains invalid characters",
+                    context={
+                        "details": f"Description = {self.value} contains invalid characters at pos={position}, char={char}"
+                    },
+                )
+            else:
+                raise DomainValidationError(
+                    message="Description contains invalid characters",
+                    context={
+                        "details": f"Description = {self.value} contains invalid characters"
+                    },
+                )
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         text: str,
     ) -> Self:

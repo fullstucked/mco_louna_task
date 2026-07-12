@@ -36,7 +36,7 @@ class Amount(ValueObject[Decimal]):
                 )
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         amount: Decimal,
     ) -> Self:

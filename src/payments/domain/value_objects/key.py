@@ -26,7 +26,7 @@ class IdempotencyKey(ValueObject[UUID]):
                 )
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         key: UUID,
     ) -> Self:

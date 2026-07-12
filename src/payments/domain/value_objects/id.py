@@ -30,7 +30,7 @@ class PaymentID(ValueObject[UUID]):
                 )
 
     @classmethod
-    def rebuild(  # pyrefly: ignore [bad-override]
+    def rebuild(
         cls,
         id: UUID,
     ) -> Self:
