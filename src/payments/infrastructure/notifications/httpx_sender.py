@@ -32,9 +32,6 @@ class HttpxWebhookSender(WebhookSender):
     async def send(self, url: str, payload: dict, timeout: int = 5) -> None:
         """
         Send webhook with retries and circuit breaker protection.
-
-        All exceptions are wrapped as application-layer exceptions.
-
         Raises:
             WebhookUrlInvalidError: Malformed or unsupported URL.
             WebhookPayloadError: Serialization failure or 4xx (except 429).

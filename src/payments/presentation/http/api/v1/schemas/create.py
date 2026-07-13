@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
-from payments.application.dto.commands.create import CreatePaymentCommand
+from payments.application.handlers.commands.create import CreatePaymentCommand
 from payments.domain.enums.currency import Currency
 
 

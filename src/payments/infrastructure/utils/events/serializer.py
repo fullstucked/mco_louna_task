@@ -20,7 +20,16 @@ METADATA_FIELDS = {
 
 
 def _serialize_value(value: Any, convert_to_iso: bool = False) -> Any:
-    """Recursively serialize non-JSON types"""
+    """
+    Recursively serialize non-JSON types to JSON-compatible forms.
+    Args:
+        value: Value to serialize (primitives, Decimal, UUID, datetime, Enum, dict, list, dataclass).
+        convert_to_iso: If True, convert datetime to ISO format string; else leave as-is.  //for distinction between database(supports datetime) and json
+    Returns:
+        JSON-serializable value.
+    Raises:
+        SerializationError: Type not supported for serialization.
+    """
     if value is None:
         return None
     if isinstance(value, (str, int, float, bool)):
@@ -46,7 +55,16 @@ def _serialize_value(value: Any, convert_to_iso: bool = False) -> Any:
 def serialize_event(
     event: PaymentDomainEvent, convert_to_iso: bool = False
 ) -> dict[str, Any]:
-    """Convert event to outbox record"""
+    """
+    Convert domain event to serialized format.
+    Separates event metadata (id, occurred_at, queue) from application payload.
+    Metadata fields are excluded from payload to prevent duplication in outbox.
+    Args:
+        event: PaymentDomainEvent instance to serialize.
+        convert_to_iso: If True, convert datetime to ISO format string.
+    Returns:
+        Dict with keys: id, occurred_at, queue, payload.
+    """
     event_dict = asdict(event)
 
     # Extract payload (everything except metadata)

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from payments.application.use_cases.commands.create import CreatePaymentUseCase
+from payments.application.handlers.commands.create import CreatePaymentUseCase
 
 
 def create_payment_command() -> CreatePaymentUseCase:

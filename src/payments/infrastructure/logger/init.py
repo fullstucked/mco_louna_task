@@ -10,7 +10,6 @@ def setup_logging(
 ) -> None:
     """
     Configure structlog for JSON logging with context support.
-
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         env: Deployment environment (DEV, STAGE, PROD)

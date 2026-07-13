@@ -1,5 +1,5 @@
-from datetime import timezone
-from datetime import datetime
+from sqlalchemy import asc
+from datetime import datetime, timezone
 from typing import Iterable
 from uuid import UUID
 
@@ -8,9 +8,9 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from payments.application.interfaces.outbox_repository import PaymentEventRepository
+from payments.domain.enums.task_status import TaskStatus
 from payments.domain.events import PaymentDomainEvent
 from payments.infrastructure.database.outbox.table import outbox
-from payments.infrastructure.database.outbox.task_status import TaskStatus
 from payments.infrastructure.utils.events.rebuilder import rebuild_event
 from payments.infrastructure.utils.events.serializer import serialize_event
 
@@ -52,7 +52,7 @@ class SqlAlchemyOutboxRepository(PaymentEventRepository):
         check_stmt = (
             select(outbox.c.id)
             .where(outbox.c.id == event_id)
-            .with_for_update()  # Blocking lock, not skip_locked
+            .with_for_update(skip_locked=True)  # Blocking lock, not skip_locked
         )
 
         result = await self.session.execute(check_stmt)
@@ -75,6 +75,7 @@ class SqlAlchemyOutboxRepository(PaymentEventRepository):
         event_stmt = (
             select(outbox)
             .where(outbox.c.status == TaskStatus.PENDING)
+            .order_by(asc(outbox.c.occurred_at))  # Oldest first
             .limit(limit)
             .offset(offset)
             .with_for_update(skip_locked=True)

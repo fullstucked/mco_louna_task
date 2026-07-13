@@ -23,7 +23,15 @@ EXCHANGE_REGISTRY: dict[type[PaymentDomainEvent], RabbitExchange] = {}
 
 
 def register_exchange(exch: RabbitExchange, events: list[type[PaymentDomainEvent]]):
-    """Registry for group of events with the same `__event_group__`"""
+    """
+    Register event classes to a topic exchange.
+    Maps each event type to its exchange for routing during publish.
+    Args:
+        exch: RabbitExchange instance (must be TOPIC type).
+        events: Event classes sharing the same __event_group__.
+    Returns:
+        RabbitExchange: The registered exchange.
+    """
     for event in events:
         EXCHANGE_REGISTRY[event] = exch
     exch.name = event.__event_group__
@@ -48,7 +56,15 @@ QUEUE_REGISTRY: dict[type[PaymentDomainEvent], RabbitQueue] = {}
 
 
 def register_queue(queue: RabbitQueue, event: type[PaymentDomainEvent]):
-    """Registry for future event rebuilds from raw data"""
+    """
+    Register durable queue to event type for event sourcing and replay.
+    Maps event class to its queue, sets routing_key from event.__event_key__.
+    Args:
+        queue: RabbitQueue instance (durable, quorum-type).
+        event: Event class this queue consumes.
+    Returns:
+        RabbitQueue: The registered queue.
+    """
     queue.routing_key = event.__event_key__
     QUEUE_REGISTRY[event] = queue
     return queue

@@ -37,15 +37,14 @@ class FetchPendingTasks:
         """
         async with uow:
             events = await uow.outbox.get_pendings()
-            if events:
-                try:
-                    await event_bus.publish_payment_events(events)
-                except PublisherUnavailableError:
-                    logger.warning("publisher_unavalible_fetching_impossible")
-                    raise
-                except EventRoutingError:
-                    logger.error("Routing misconfigured")
-                    raise
-                except EventSerializationError:
-                    logger.error("event_serialization_failed")
-                    raise
+            try:
+                await event_bus.publish_payment_events(events)
+            except PublisherUnavailableError:
+                logger.warning("publisher_unavalible_fetching_impossible")
+                raise
+            except EventRoutingError:
+                logger.error("Routing misconfigured")
+                raise
+            except EventSerializationError:
+                logger.error("event_serialization_failed")
+                raise

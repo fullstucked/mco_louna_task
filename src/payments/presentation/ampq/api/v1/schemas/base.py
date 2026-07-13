@@ -1,4 +1,3 @@
-from pydantic import ConfigDict
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel

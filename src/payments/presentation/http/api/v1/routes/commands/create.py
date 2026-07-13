@@ -2,8 +2,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Header, status
 
-from payments.application.dto.commands.create import CreatePaymentCommand
-from payments.application.use_cases.commands.create import CreatePaymentUseCase
+from payments.application.handlers.commands.create import (
+    CreatePaymentCommand,
+    CreatePaymentUseCase,
+)
 from payments.infrastructure.broker.event_bus import AMQPEventPublisher
 from payments.infrastructure.database.uow import PaymentsUoWSQLAlchemy
 from payments.presentation.http.api.v1.dependencies.commands import (

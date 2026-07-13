@@ -19,13 +19,10 @@ class EventEnvelope:
 def rebuild_event(envelope: EventEnvelope | dict) -> PaymentDomainEvent:
     """
     Reconstructs domain event from envelope.
-
     Args:
         envelope: EventEnvelope or dict with id, occurred_at, group, key, payload
-
     Returns:
         PaymentDomainEvent subclass instance
-
     Raises:
         ValueError: If event type not registered
         KeyError: If payload missing required fields
@@ -46,7 +43,7 @@ def rebuild_event(envelope: EventEnvelope | dict) -> PaymentDomainEvent:
     event_cls = EVENT_REGISTRY.get(registry_key)
 
     if not event_cls:
-        raise ValueError(
+        raise ValueError(  # TODO FIX - to Internal Domain Error
             f"Unknown event type: {registry_key}. "
             f"Available: {', '.join(EVENT_REGISTRY.keys())}"
         )
@@ -55,7 +52,7 @@ def rebuild_event(envelope: EventEnvelope | dict) -> PaymentDomainEvent:
     try:
         return event_cls(id=event_id, occurred_at=occurred_at, **payload)
     except TypeError as e:
-        raise ValueError(
+        raise ValueError(  # TODO FIX - to Internal Domain Error
             f"Cannot reconstruct {registry_key}: {e}. "
             f"Payload missing required fields?"
         ) from e

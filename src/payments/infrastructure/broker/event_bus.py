@@ -24,9 +24,17 @@ logger = get_logger()
 
 
 class AMQPEventPublisher(PaymentEventBus):
-    """Event publisher for publishing domain events to RabbitMQ."""
+    """
+    Event publisher for publishing domain events to RabbitMQ.
+
+    Publishes PaymentDomainEvents to configured exchanges/queues with circuit breaker protection.
+    Validates routing and serialization before sending."""
 
     def __init__(self, broker: RabbitBroker) -> None:
+        """
+        Args:
+            broker: RabbitBroker instance for AMQP communication.(already connected)
+        """
         self.broker = broker
         self.breaker = CircuitBreaker(
             fail_max=5,
@@ -79,6 +87,9 @@ class AMQPEventPublisher(PaymentEventBus):
                 )
 
             try:
+                # Circuit breaker: Publish with failure/state protection.
+                # Excluded exceptions (EventRoutingError, EventSerializationError)
+                # do not increment failure counter.
                 await self.breaker.call(
                     self._broker_publish,
                     message=message,

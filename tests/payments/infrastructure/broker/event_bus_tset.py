@@ -592,7 +592,7 @@ async def test_message_headers_set_correctly(
 
 
 @pytest.mark.asyncio
-async def test_large_event_batch(publisher, mock_broker ):
+async def test_large_event_batch(publisher, mock_broker):
     """Test publishing a large batch of events."""
     events = [
         PaymentCreatedEvent(

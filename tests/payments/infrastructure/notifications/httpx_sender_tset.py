@@ -1,8 +1,9 @@
-from payments.infrastructure.notifications.httpx_sender import HttpxWebhookSender
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+
+from payments.infrastructure.notifications.httpx_sender import HttpxWebhookSender
 
 
 @pytest.fixture

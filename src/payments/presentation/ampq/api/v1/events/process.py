@@ -2,7 +2,8 @@ from faststream import AckPolicy, Depends
 from faststream.rabbit import RabbitMessage, RabbitRouter
 from faststream.rabbit.annotations import RabbitBroker
 
-from payments.application.use_cases.events.process import ProcessPayment
+from payments.application.handlers.events.process import ProcessPayment
+from payments.domain.enums.task_status import TaskStatus
 from payments.infrastructure.broker.event_bus import AMQPEventPublisher
 from payments.infrastructure.broker.routes import (
     dlq,
@@ -10,7 +11,6 @@ from payments.infrastructure.broker.routes import (
     payments_dlx,
     payments_exchange,
 )
-from payments.infrastructure.database.outbox.task_status import TaskStatus
 from payments.infrastructure.database.uow import PaymentsUoWSQLAlchemy
 from payments.presentation.ampq.api.v1.dependencies.commands import (
     process_payment_command,

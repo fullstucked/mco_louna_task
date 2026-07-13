@@ -1,3 +1,5 @@
+from payments.application.interfaces.uow import RepositoriesUnavailableError
+from payments.application.interfaces.uow import RepositoriesExhaustedError
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -5,6 +7,12 @@ from typing import Any
 from uuid import UUID
 
 from structlog import get_logger
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from payments.application.interfaces.event_publisher import (
     EventRoutingError,
@@ -41,6 +49,17 @@ class CreatePaymentCommand:
 logger = get_logger()
 
 
+@retry(  # COMMENT TO SWITCH OFF RETRY LOGIC TO DATABASE
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type(
+        (
+            RepositoriesExhaustedError,
+            RepositoriesUnavailableError,
+        )
+    ),
+    reraise=True,
+)
 class CreatePaymentUseCase:
     """
     Creates a new payment aggregate with idempotency guarantees.

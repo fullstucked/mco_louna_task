@@ -1,3 +1,4 @@
+from shared.domain.errors import DomainResourceExistsError
 from typing import Optional
 
 from sqlalchemy import RowMapping, select, update
@@ -30,23 +31,30 @@ class SqlAlchemyPaymentRepository(PaymentRepository):
 
     async def add(self, payment: Payment) -> None:
         """
-        Saves payment aggregate with idempotency via ON CONFLICT DO NOTHING.
-        Multiple inserts with same idempotency_key are silently ignored.
+        Saves payment aggregate with idempotency via unique constraint check.
+        Raises DomainResourceExistsError if idempotency_key already exists.
         """
-        stmt = (
-            pg_insert(payments)
-            .values(
-                id=payment.id.value,
-                amount=payment.amount.value,
-                currency=payment.currency.value,
-                description=payment.description.value,
-                metadata=payment.metadata.value,
-                status=payment.status.value,
-                idempotency_key=payment.key.value,
-                created_at=payment.created_at.value,
-                webhook_url=payment.webhook_url.value,
+        # Check if payment with this idempotency key already exists
+        check_stmt = select(payments.c.id).where(
+            payments.c.idempotency_key == payment.key.value
+        )
+        existing = await self.session.execute(check_stmt)
+        if existing.scalar_one_or_none() is not None:
+            raise DomainResourceExistsError(
+                f"Payment already exists with idempotency_key {payment.key.value}"
             )
-            .on_conflict_do_nothing(index_elements=["idempotency_key"])
+
+        # Insert new payment
+        stmt = pg_insert(payments).values(
+            id=payment.id.value,
+            amount=payment.amount.value,
+            currency=payment.currency.value,
+            description=payment.description.value,
+            metadata=payment.metadata.value,
+            status=payment.status.value,
+            idempotency_key=payment.key.value,
+            created_at=payment.created_at.value,
+            webhook_url=payment.webhook_url.value,
         )
         await self.session.execute(stmt)
         await self.session.flush()
@@ -61,15 +69,14 @@ class SqlAlchemyPaymentRepository(PaymentRepository):
             .where(payments.c.id == payment.id.value)
             .values(
                 status=payment.status.value,
-                # pyrefly: ignore [missing-attribute]
-                processed_at=payment.processed_at.value,
+                processed_at=payment.processed_at.value,  # pyrefly: ignore [missing-attribute]
             )
             .returning(payments.c.id)
         )
         result = await self.session.execute(stmt)
         await self.session.flush()
 
-        if result.scalar_one_or_none() == 0:
+        if result.scalar_one_or_none() is None:  # ← Check for None, not 0
             raise DomainResourceNotFoundError(
                 f"Cannot update: Payment {payment.id.value} not found"
             )

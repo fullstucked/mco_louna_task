@@ -1,8 +1,8 @@
+from payments.domain.enums.task_status import TaskStatus
 from abc import ABC, abstractmethod
 from typing import Iterable
 from uuid import UUID
 
-from payments.domain.enums.status import PaymentStatus
 from payments.domain.events import PaymentDomainEvent
 
 
@@ -45,7 +45,7 @@ class PaymentEventRepository(ABC):
         self,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[PaymentDomainEvent] | None:
+    ) -> list[PaymentDomainEvent]:
         """
         Retrieve unprocessed domain events with pagination.
 
@@ -95,16 +95,17 @@ class PaymentEventRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def mark_processed(self, event_id: UUID, upd_status: PaymentStatus) -> None:
+    async def mark_processed(self, event_id: UUID, upd_status: TaskStatus) -> None:
         """
         Mark an event as successfully processed with its final status.
         Args:
             event_id: UUID
-            upd_status: PaymentStatus
+            upd_status: TaskStatus
                 The final payment status associated with this event.
-                - PaymentStatus.CONFIRMED: Payment was successfully charged
-                - PaymentStatus.FAILED: Payment processing failed
-                - PaymentStatus.PENDING: (Rare) Event processing deferred
+                - TaskStatus.CONFIRMED: Payment was successfully charged
+                - TaskStatus.FAILED: Payment processing failed
+                - TaskStatus.IN_PROCESS: Task handled
+                - TaskStatus.PENDING: (Rare) Event processing deferred
         Returns:
             None
         Raises:

@@ -3,6 +3,28 @@ from payments.domain.repository import PaymentRepository
 from shared.application.interfaces.uow import AbstractUnitOfWork
 
 
+class RepositoriesUnavailableError(Exception):
+    """
+    Raised by:
+        UoW.commit() on OperationalError from SQLAlchemy
+    Causes:
+        - Storage internal error
+    """
+
+    pass
+
+
+class RepositoriesExhaustedError(Exception):
+    """
+    Raised by:
+        UoW.commit()
+    Causes:
+        Repository overloaded
+    """
+
+    pass
+
+
 class PaymentUoW(AbstractUnitOfWork):
     """
     Unit of Work for payment domain operations.
@@ -39,6 +61,11 @@ class PaymentUoW(AbstractUnitOfWork):
         7. If an error occurs before commit(), application calls uow.rollback()
            - All uncommitted changes are discarded
            - External processors never see incomplete state
+
+    Raises:
+        RepositoryException
+        RepositoriesUnavailableError
+        RepositoryConnectionPoolExhaustedError
     """
 
     payments: PaymentRepository

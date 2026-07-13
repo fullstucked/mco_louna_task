@@ -1,4 +1,3 @@
-from payments.presentation.ampq.api.v1.dependencies.infra.broker import get_broker
 from faststream import FastStream
 
 from payments.infrastructure.broker.routes import (
@@ -8,6 +7,7 @@ from payments.infrastructure.broker.routes import (
     payments_dlx,
     payments_exchange,
 )
+from payments.presentation.ampq.api.v1.dependencies.infra.broker import get_broker
 from payments.presentation.ampq.api.v1.events.notify import (
     DELAY_BASE as NOTIFY_DELAY_BASE,
 )

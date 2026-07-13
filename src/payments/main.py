@@ -16,3 +16,6 @@ if __name__ == "__main__":
         reload=False,
         loop="uvloop",
     )
+
+    # FIX ERROR logger.info("app_started", version="1.0.0", pid=os.getpid())
+    # logger.error("operation_failed", error_code="E001", retries=3)

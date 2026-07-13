@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, TIMESTAMP, Column, Enum, Index, String, Table
 from sqlalchemy.dialects.postgresql import UUID
 
-from payments.infrastructure.database.outbox.task_status import TaskStatus
+from payments.domain.enums.task_status import TaskStatus
 from payments.infrastructure.database.session import metadata
 
 outbox = Table(

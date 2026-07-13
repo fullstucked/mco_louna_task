@@ -2,8 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from payments.application.dto.queries.create import GetPaymentQuery
-from payments.application.use_cases.queries.get import GetPayment
+from payments.application.handlers.queries.get import GetPayment, GetPaymentQuery
 from payments.infrastructure.database.uow import PaymentsUoWSQLAlchemy
 from payments.presentation.http.api.v1.dependencies.infra.database import get_uow
 from payments.presentation.http.api.v1.dependencies.queries import get_payment_query

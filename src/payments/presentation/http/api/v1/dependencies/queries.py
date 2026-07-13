@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from payments.application.use_cases.queries.get import GetPayment
+from payments.application.handlers.queries.get import GetPayment
 
 
 def get_payment_query() -> GetPayment:

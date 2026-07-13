@@ -1,9 +1,8 @@
-from payments.infrastructure.database.outbox.task_status import TaskStatus
-from shared.infra.broker.utils.retry_queue import create_retry_queues
 from faststream import AckPolicy, Depends
 from faststream.rabbit import RabbitBroker, RabbitMessage, RabbitRouter
 
-from payments.application.use_cases.events.notify import SendNotificationUseCase
+from payments.application.handlers.events.notify import SendNotificationUseCase
+from payments.domain.enums.task_status import TaskStatus
 from payments.infrastructure.broker.routes import (
     dlq,
     notify_payments_q,
@@ -22,6 +21,7 @@ from payments.presentation.ampq.api.v1.schemas.notify import (
     NotifyEvent,
     notify_event_to_domain,
 )
+from shared.infra.broker.utils.retry_queue import create_retry_queues
 
 notify_router = RabbitRouter()
 
