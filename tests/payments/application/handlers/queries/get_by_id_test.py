@@ -1,16 +1,15 @@
-from shared.domain.errors import DomainTypeError
 from decimal import Decimal
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 
-from payments.application.dto.queries.create import (
+from payments.application.handlers.queries.get import (
+    GetPayment,
     GetPaymentQuery,
     GetPaymentQueryResponse,
 )
 from payments.application.interfaces.uow import PaymentUoW
-from payments.application.use_cases.queries.get import GetPayment
 from payments.domain.enums.currency import Currency
 from payments.domain.payment import Payment
 from payments.domain.value_objects.amount import Amount
@@ -18,7 +17,7 @@ from payments.domain.value_objects.description import Description
 from payments.domain.value_objects.key import IdempotencyKey
 from payments.domain.value_objects.metadata import Metadata
 from payments.domain.value_objects.webhook import WebhookUrl
-from shared.domain.errors import DomainResourceNotFoundError
+from shared.domain.errors import DomainResourceNotFoundError, DomainTypeError
 
 
 class TestGetPayment:

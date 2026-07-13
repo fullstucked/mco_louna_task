@@ -3,9 +3,9 @@ from uuid import uuid4
 
 import pytest
 
+from payments.application.handlers.queries.pendings import FetchPendingTasks
 from payments.application.interfaces.event_publisher import PaymentEventBus
 from payments.application.interfaces.uow import PaymentUoW
-from payments.application.use_cases.queries.pendings import FetchPendingTasks
 from payments.domain.events import PaymentCreatedEvent
 
 
@@ -18,15 +18,9 @@ class TestFetchPendingTasks:
         # Create mock events
         event1 = PaymentCreatedEvent(
             payment_id=uuid4(),
-            amount=100.00,
-            currency="USD",
-            webhook_url="https://example.com/webhook",
         )
         event2 = PaymentCreatedEvent(
             payment_id=uuid4(),
-            amount=50.00,
-            currency="EUR",
-            webhook_url="https://example.com/webhook",
         )
         pending_events = [event1, event2]
 
@@ -44,8 +38,8 @@ class TestFetchPendingTasks:
         mock_event_bus = AsyncMock(spec=PaymentEventBus)
         mock_event_bus.publish_payment_events = AsyncMock()
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
-        await job()
+        job = FetchPendingTasks()
+        await job(uow=mock_uow, event_bus=mock_event_bus)
 
         # Verify outbox was queried for pending events
         mock_outbox_repo.get_pendings.assert_awaited_once()
@@ -74,8 +68,8 @@ class TestFetchPendingTasks:
         mock_event_bus = AsyncMock(spec=PaymentEventBus)
         mock_event_bus.publish_payment_events = AsyncMock()
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
-        await job()
+        job = FetchPendingTasks()
+        await job(uow=mock_uow, event_bus=mock_event_bus)
 
         # Verify outbox was queried
         mock_outbox_repo.get_pendings.assert_awaited_once()
@@ -96,8 +90,8 @@ class TestFetchPendingTasks:
 
         mock_event_bus = AsyncMock(spec=PaymentEventBus)
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
-        await job()
+        job = FetchPendingTasks()
+        await job(uow=mock_uow, event_bus=mock_event_bus)
 
         # Verify context manager was used
         mock_uow.__aenter__.assert_awaited_once()
@@ -108,9 +102,6 @@ class TestFetchPendingTasks:
         """FetchPendingTasks should propagate publishing errors."""
         event = PaymentCreatedEvent(
             payment_id=uuid4(),
-            amount=100.00,
-            currency="USD",
-            webhook_url="https://example.com/webhook",
         )
 
         mock_outbox_repo = AsyncMock()
@@ -127,10 +118,10 @@ class TestFetchPendingTasks:
             side_effect=Exception("Publishing failed")
         )
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
+        job = FetchPendingTasks()
 
         with pytest.raises(Exception, match="Publishing failed"):
-            await job()
+            await job(uow=mock_uow, event_bus=mock_event_bus)
 
     @pytest.mark.asyncio
     async def test_fetch_pending_tasks_get_pendings_fails(self):
@@ -147,19 +138,16 @@ class TestFetchPendingTasks:
 
         mock_event_bus = AsyncMock(spec=PaymentEventBus)
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
+        job = FetchPendingTasks()
 
         with pytest.raises(Exception, match="Outbox query failed"):
-            await job()
+            await job(uow=mock_uow, event_bus=mock_event_bus)
 
     @pytest.mark.asyncio
     async def test_fetch_pending_tasks_single_event(self):
         """FetchPendingTasks should handle single pending event correctly."""
         event = PaymentCreatedEvent(
             payment_id=uuid4(),
-            amount=75.50,
-            currency="GBP",
-            webhook_url="https://api.example.com/webhook",
         )
 
         mock_outbox_repo = AsyncMock()
@@ -173,23 +161,11 @@ class TestFetchPendingTasks:
         mock_event_bus = AsyncMock(spec=PaymentEventBus)
         mock_event_bus.publish_payment_events = AsyncMock()
 
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
-        await job()
+        job = FetchPendingTasks()
+        await job(uow=mock_uow, event_bus=mock_event_bus)
 
         # Verify exactly one event was published
         mock_event_bus.publish_payment_events.assert_awaited_once()
         published_events = mock_event_bus.publish_payment_events.call_args[0][0]
         assert len(published_events) == 1
         assert published_events[0] == event
-
-    @pytest.mark.asyncio
-    async def test_fetch_pending_tasks_dependency_injection(self):
-        """FetchPendingTasks should accept UoW and EventBus via constructor."""
-        mock_uow = AsyncMock(spec=PaymentUoW)
-        mock_event_bus = AsyncMock(spec=PaymentEventBus)
-
-        # Should initialize without errors
-        job = FetchPendingTasks(uow=mock_uow, event_bus=mock_event_bus)
-
-        assert job.uow == mock_uow
-        assert job.event_bus == mock_event_bus
