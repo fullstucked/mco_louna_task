@@ -1,5 +1,3 @@
-from payments.application.interfaces.uow import RepositoriesUnavailableError
-from payments.application.interfaces.uow import RepositoriesExhaustedError
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -20,7 +18,11 @@ from payments.application.interfaces.event_publisher import (
     PaymentEventBus,
     PublisherUnavailableError,
 )
-from payments.application.interfaces.uow import PaymentUoW
+from payments.application.interfaces.uow import (
+    PaymentUoW,
+    RepositoriesExhaustedError,
+    RepositoriesUnavailableError,
+)
 from payments.domain.enums.currency import Currency
 from payments.domain.enums.status import PaymentStatus
 from payments.domain.payment import Payment

@@ -1,3 +1,4 @@
+from types import MappingProxyType
 from dataclasses import asdict, fields, is_dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -43,11 +44,16 @@ def _serialize_value(value: Any, convert_to_iso: bool = False) -> Any:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, dict):
-        return {k: _serialize_value(v) for k, v in value.items()}
+        return {k: _serialize_value(v, convert_to_iso) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
-        return [_serialize_value(v) for v in value]
+        return [_serialize_value(v, convert_to_iso) for v in value]
+    if isinstance(value, MappingProxyType):
+        return {k: _serialize_value(v, convert_to_iso) for k, v in dict(value).items()}
     if is_dataclass(value):
-        return {f.name: _serialize_value(getattr(value, f.name)) for f in fields(value)}
+        return {
+            f.name: _serialize_value(getattr(value, f.name), convert_to_iso)
+            for f in fields(value)
+        }
 
     raise SerializationError(f"Cannot serialize {type(value).__name__}: {value}")
 

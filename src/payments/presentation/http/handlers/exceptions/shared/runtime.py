@@ -12,10 +12,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     async def type_error_handler(request: Request, exc: TypeError) -> JSONResponse:
         """Type mismatch or invalid operation on wrong type."""
 
-        logger.warning(
-            "TypeError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.warning(
+        #     "TypeError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -32,10 +32,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
         """Invalid value for operation."""
 
-        logger.warning(
-            "ValueError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.warning(
+        #     "ValueError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -52,10 +52,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     async def key_error_handler(request: Request, exc: KeyError) -> JSONResponse:
         """Dictionary/mapping key not found."""
 
-        logger.info(
-            "KeyError",
-            extra={"path": request.url.path, "key": str(exc.args[0])},
-        )
+        # logger.info(
+        #     "KeyError",
+        #     extra={"path": request.url.path, "key": str(exc.args[0])},
+        # )
 
         return JSONResponse(
             content={
@@ -74,10 +74,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     ) -> JSONResponse:
         """Object attribute not found."""
 
-        logger.error(
-            "AttributeError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.error(
+        #     "AttributeError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -94,10 +94,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     async def index_error_handler(request: Request, exc: IndexError) -> JSONResponse:
         """List/sequence index out of range."""
 
-        logger.warning(
-            "IndexError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.warning(
+        #     "IndexError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -116,10 +116,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     ) -> JSONResponse:
         """Generic runtime error."""
 
-        logger.error(
-            "RuntimeError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.error(
+        #     "RuntimeError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -138,10 +138,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     ) -> JSONResponse:
         """Operation timed out."""
 
-        logger.warning(
-            "TimeoutError",
-            extra={"path": request.url.path, "error": str(exc)},
-        )
+        # logger.warning(
+        #     "TimeoutError",
+        #     extra={"path": request.url.path, "error": str(exc)},
+        # )
 
         return JSONResponse(
             content={
@@ -160,10 +160,10 @@ def register_runtime_exception_handlers(app: FastAPI):
     ) -> JSONResponse:
         """Catch-all for unhandled exceptions."""
 
-        logger.exception(
-            "Unhandled exception",
-            extra={"path": request.url.path, "error_type": type(exc).__name__},
-        )
+        # logger.exception(
+        #     "Unhandled exception",
+        #     extra={"path": request.url.path, "error_type": type(exc).__name__},
+        # )
 
         return JSONResponse(
             content={

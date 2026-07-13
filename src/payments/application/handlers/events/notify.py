@@ -57,22 +57,22 @@ class SendNotificationUseCase:
                 payload=payload,
                 timeout=timeout,
             )
-            logger.info("payment_confirmation_notified", payment_id=event.payment_id)
+            #logger.info("payment_confirmation_notified", payment_id=event.payment_id)
 
         except WebhookUrlInvalidError:
             # Unsupported protocol by implementation for example (Not domain boundary)
-            logger.error("webhook_url_invalid", webhook_url=event.webhook_url)
+            #logger.error("webhook_url_invalid", webhook_url=event.webhook_url)
             raise
 
         except WebhookPayloadError:
             # Implementation do not supports serialized event
-            logger.error("webhook_payload_invalid", payment_id=event.payment_id)
+            #logger.error("webhook_payload_invalid", payment_id=event.payment_id)
             raise
 
         except WebhookSenderUnavailableError:
-            logger.warning(
-                "webhook_sender_unavailable",
-                payment_id=event.payment_id,
-                webhook_url=event.webhook_url,
-            )
+            #logger.warning(
+            #     "webhook_sender_unavailable",
+            #     payment_id=event.payment_id,
+            #     webhook_url=event.webhook_url,
+            # )
             raise

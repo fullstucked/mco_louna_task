@@ -50,7 +50,7 @@ class SqlAlchemyPaymentRepository(PaymentRepository):
             amount=payment.amount.value,
             currency=payment.currency.value,
             description=payment.description.value,
-            metadata=payment.metadata.value,
+            metadata=dict(payment.metadata.value),
             status=payment.status.value,
             idempotency_key=payment.key.value,
             created_at=payment.created_at.value,

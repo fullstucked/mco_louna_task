@@ -1,31 +1,27 @@
 import os
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI
 from faststream.rabbit import RabbitBroker
-from structlog import get_logger
-
-from payments.infrastructure.logger.init import setup_logging
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    setup_logging(
-        level=os.getenv("LOG_LEVEL", "DEBUG"),
-        env=os.getenv("ENV", "DEV"),
-    )
-    logger = get_logger()
+
+    logger = structlog.get_logger()
+
+    app.state.logger = logger
 
     broker = RabbitBroker(os.getenv("BROKER_URL"))
     await broker.start()
 
-    app.state.logger = logger
     app.state.broker = broker
 
-    logger.info("startup")
+    # logger.info("startup")
 
     yield
 
-    logger.info("shutdown")
+    # logger.info("shutdown")
 
     await broker.stop()

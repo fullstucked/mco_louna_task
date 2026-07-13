@@ -28,11 +28,13 @@ def setup_logging(
         structlog.processors.UnicodeDecoder(),
     ]
 
-    # Environment-specific rendering
-    # if env == "DEV": TODO FIX
-    #     shared_processors.append(structlog.dev.ConsoleRenderer(colors=True))
-    # else:
-    #     shared_processors.append(structlog.processors.JSONRenderer())
+    formatter = structlog.stdlib.ProcessorFormatter(
+        processor=(
+            structlog.dev.ConsoleRenderer(colors=True)
+            if env == "DEV"
+            else structlog.processors.JSONRenderer()
+        ),
+    )
 
     structlog.configure(
         processors=shared_processors,
@@ -51,6 +53,6 @@ def setup_logging(
 
     # Add handler to root logger
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler.setFormatter(formatter)  # ✅ Use ProcessorFormatter here
     handler.setLevel(log_level)
     root_logger.addHandler(handler)

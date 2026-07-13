@@ -63,11 +63,11 @@ class AMQPEventPublisher(PaymentEventBus):
                 queue_config = QUEUE_REGISTRY[type(event)]
                 exchange = EXCHANGE_REGISTRY[type(event)]
             except KeyError:
-                logger.error(
-                    "event_routing_not_configured",
-                    event_type=event_type,
-                    event_id=event_id,
-                )
+                #logger.error(
+                #     "event_routing_not_configured",
+                #     event_type=event_type,
+                #     event_id=event_id,
+                # )
                 raise EventRoutingError(
                     f"Event routing not configured for {event_type}"
                 )
@@ -76,12 +76,12 @@ class AMQPEventPublisher(PaymentEventBus):
             try:
                 message = self._parse_event_to_message(event)
             except (TypeError, ValueError) as e:
-                logger.error(
-                    "event_serialization_failed",
-                    event_type=event_type,
-                    event_id=event_id,
-                    error=str(e),
-                )
+                #logger.error(
+                #     "event_serialization_failed",
+                #     event_type=event_type,
+                #     event_id=event_id,
+                #     error=str(e),
+                # )
                 raise EventSerializationError(
                     f"Cannot serialize event {event_type}: {e}"
                 )
@@ -96,25 +96,25 @@ class AMQPEventPublisher(PaymentEventBus):
                     routing_key=queue_config.routing_key,
                     exchange=exchange,
                 )
-                logger.info(
-                    "event_published",
-                    event_type=event_type,
-                    event_id=event_id,
-                )
+                #logger.info(
+                #     "event_published",
+                #     event_type=event_type,
+                #     event_id=event_id,
+                # )
             except CircuitBreakerError:
-                logger.error(
-                    "event_publisher_circuit_open",
-                    event_type=event_type,
-                    event_id=event_id,
-                )
+                #logger.error(
+                #     "event_publisher_circuit_open",
+                #     event_type=event_type,
+                #     event_id=event_id,
+                # )
                 raise PublisherUnavailableError("Event publisher circuit is open")
             except (aio_pika.exceptions.AMQPError, Exception) as e:
-                logger.error(
-                    "event_publish_failed",
-                    event_type=event_type,
-                    event_id=event_id,
-                    error=str(e),
-                )
+                #logger.error(
+                #     "event_publish_failed",
+                #     event_type=event_type,
+                #     event_id=event_id,
+                #     error=str(e),
+                # )
                 raise PublisherUnavailableError(f"Failed to publish {event_type}: {e}")
 
     async def _broker_publish(

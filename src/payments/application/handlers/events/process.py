@@ -66,13 +66,13 @@ class ProcessPayment:
         try:
             await event_bus.publish_payment_events(events)
         except PublisherUnavailableError:
-            logger.warning("publisher_unavailable_events_in_outbox")
+            # logger.warning("publisher_unavailable_events_in_outbox")
             raise
         except EventRoutingError:
-            logger.error("Routing misconfigured")
+            # logger.error("Routing misconfigured")
             raise
         except EventSerializationError:
-            logger.error("event_serialization_failed")
+            # logger.error("event_serialization_failed")
             raise
 
     async def _emulate_processing(self, payment: Payment) -> None:

@@ -1,6 +1,7 @@
 import os
 from typing import cast
 
+from payments.infrastructure.logger.init import setup_logging
 from payments.presentation.http.factory import create_app
 
 if __name__ == "__main__":
@@ -8,6 +9,11 @@ if __name__ == "__main__":
 
     port = int(cast(str, os.getenv("API_PORT")))
     host = cast(str, os.getenv("API_HOST"))
+
+    setup_logging(
+        level=os.getenv("LOG_LEVEL", "DEBUG"),
+        env=os.getenv("ENV", "DEV"),
+    )
 
     uvicorn.run(
         app=create_app(),

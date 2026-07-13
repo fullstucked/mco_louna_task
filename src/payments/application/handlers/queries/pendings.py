@@ -40,11 +40,11 @@ class FetchPendingTasks:
             try:
                 await event_bus.publish_payment_events(events)
             except PublisherUnavailableError:
-                logger.warning("publisher_unavalible_fetching_impossible")
+                #logger.warning("publisher_unavalible_fetching_impossible")
                 raise
             except EventRoutingError:
-                logger.error("Routing misconfigured")
+                #logger.error("Routing misconfigured")
                 raise
             except EventSerializationError:
-                logger.error("event_serialization_failed")
+                #logger.error("event_serialization_failed")
                 raise
