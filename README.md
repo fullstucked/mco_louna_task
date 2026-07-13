@@ -249,8 +249,8 @@ ENV=INFO
 
 **Clone and setup:**
 ```bash
-git clone https://github.com/fullstucked/payment-service
-cd payment-service
+git clone https://github.com/fullstucked/mco_louna_task
+cd mco_louna_task
 cp .env.example .env
 ```
 
