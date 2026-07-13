@@ -4,7 +4,14 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from payments.application.interfaces.event_publisher import PaymentEventBus
+from structlog import get_logger
+
+from payments.application.interfaces.event_publisher import (
+    EventRoutingError,
+    EventSerializationError,
+    PaymentEventBus,
+    PublisherUnavailableError,
+)
 from payments.application.interfaces.uow import PaymentUoW
 from payments.domain.enums.currency import Currency
 from payments.domain.enums.status import PaymentStatus
@@ -29,6 +36,9 @@ class CreatePaymentCommand:
     description: str
     metadata: dict[str, Any]
     webhook_url: str
+
+
+logger = get_logger()
 
 
 class CreatePaymentUseCase:
@@ -65,7 +75,17 @@ class CreatePaymentUseCase:
             await uow.outbox.add(events)
             await uow.commit()
 
-        await event_bus.publish_payment_events(events)
+        try:
+            await event_bus.publish_payment_events(events)
+        except PublisherUnavailableError:
+            logger.warning("publisher_unavailable_events_in_outbox")
+            raise
+        except EventRoutingError:
+            logger.error("Routing misconfigured")
+            raise
+        except EventSerializationError:
+            logger.error("event_serialization_failed")
+            raise
 
         return CreatePaymentResponse.from_domain(payment)
 

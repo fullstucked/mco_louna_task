@@ -1,6 +1,12 @@
+from payments.application.interfaces.notifier import WebhookSenderUnavailableError
+from payments.application.interfaces.notifier import WebhookPayloadError
+from payments.application.interfaces.notifier import WebhookUrlInvalidError
+from structlog import get_logger
 from payments.application.interfaces.notifier import WebhookSender
 from payments.application.strategies.notification_payload import PayloadStrategyFactory
 from payments.domain.events import PaymentProcessedEvent
+
+logger = get_logger()
 
 
 class SendNotificationUseCase:
@@ -32,8 +38,28 @@ class SendNotificationUseCase:
         payload = strategy.build(event)
 
         # Send notification
-        await notifier.send(
-            url=event.webhook_url,
-            payload=payload,
-            timeout=timeout,
-        )
+        try:
+            await notifier.send(
+                url=event.webhook_url,
+                payload=payload,
+                timeout=timeout,
+            )
+            logger.info("payment_confirmation_notified", payment_id=event.payment_id)
+
+        except WebhookUrlInvalidError:
+            # Unsupported protocol by implementation for example (Not domain boundary)
+            logger.error("webhook_url_invalid", webhook_url=event.webhook_url)
+            raise
+
+        except WebhookPayloadError:
+            # Implementation do not supports serialized event
+            logger.error("webhook_payload_invalid", payment_id=event.payment_id)
+            raise
+
+        except WebhookSenderUnavailableError:
+            logger.warning(
+                "webhook_sender_unavailable",
+                payment_id=event.payment_id,
+                webhook_url=event.webhook_url,
+            )
+            raise

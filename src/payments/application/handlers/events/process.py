@@ -1,12 +1,21 @@
 import asyncio
 from random import random, uniform
 
-from payments.application.interfaces.event_publisher import PaymentEventBus
+from structlog import get_logger
+
+from payments.application.interfaces.event_publisher import (
+    EventRoutingError,
+    EventSerializationError,
+    PaymentEventBus,
+    PublisherUnavailableError,
+)
 from payments.application.interfaces.uow import PaymentUoW
 from payments.domain.events import PaymentCreatedEvent
 from payments.domain.payment import Payment
 from payments.domain.service import PaymentService
 from payments.domain.value_objects.id import PaymentID
+
+logger = get_logger()
 
 
 class ProcessPayment:
@@ -28,7 +37,17 @@ class ProcessPayment:
             await uow.outbox.add(events)
             await uow.commit()
 
-        await event_bus.publish_payment_events(events)
+        try:
+            await event_bus.publish_payment_events(events)
+        except PublisherUnavailableError:
+            logger.warning("publisher_unavailable_events_in_outbox")
+            raise
+        except EventRoutingError:
+            logger.error("Routing misconfigured")
+            raise
+        except EventSerializationError:
+            logger.error("event_serialization_failed")
+            raise
 
     async def _emulate_processing(self, payment: Payment) -> None:
         await asyncio.sleep(uniform(2, 5))
