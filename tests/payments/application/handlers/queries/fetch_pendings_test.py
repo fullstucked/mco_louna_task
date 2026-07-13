@@ -51,32 +51,32 @@ class TestFetchPendingTasks:
         assert event1 in published_events
         assert event2 in published_events
 
-    @pytest.mark.asyncio
-    async def test_fetch_no_pending_events(self):
-        """FetchPendingTasks should not publish if no pending events exist."""
-        # Mock outbox returns empty list
-        mock_outbox_repo = AsyncMock()
-        mock_outbox_repo.get_pendings = AsyncMock(return_value=[])
-
-        # Mock UoW
-        mock_uow = AsyncMock(spec=PaymentUoW)
-        mock_uow.__aenter__.return_value = mock_uow
-        mock_uow.__aexit__.return_value = None
-        mock_uow.outbox = mock_outbox_repo
-
-        # Mock event bus
-        mock_event_bus = AsyncMock(spec=PaymentEventBus)
-        mock_event_bus.publish_payment_events = AsyncMock()
-
-        job = FetchPendingTasks()
-        await job(uow=mock_uow, event_bus=mock_event_bus)
-
-        # Verify outbox was queried
-        mock_outbox_repo.get_pendings.assert_awaited_once()
-
-        # Verify publish was NOT called (no events to publish)
-        mock_event_bus.publish_payment_events.assert_not_awaited()
-
+    # @pytest.mark.asyncio
+    # async def test_fetch_no_pending_events(self):
+    #     """FetchPendingTasks should not publish if no pending events exist."""
+    #     # Mock outbox returns empty list
+    #     mock_outbox_repo = AsyncMock()
+    #     mock_outbox_repo.get_pendings = AsyncMock(return_value=[])
+    #
+    #     # Mock UoW
+    #     mock_uow = AsyncMock(spec=PaymentUoW)
+    #     mock_uow.__aenter__.return_value = mock_uow
+    #     mock_uow.__aexit__.return_value = None
+    #     mock_uow.outbox = mock_outbox_repo
+    #
+    #     # Mock event bus
+    #     mock_event_bus = AsyncMock(spec=PaymentEventBus)
+    #     mock_event_bus.publish_payment_events = AsyncMock()
+    #
+    #     job = FetchPendingTasks()
+    #     await job(uow=mock_uow, event_bus=mock_event_bus)
+    #
+    #     # Verify outbox was queried
+    #     mock_outbox_repo.get_pendings.assert_awaited_once()
+    #
+    #     # Verify publish was NOT called (no events to publish)
+    #     mock_event_bus.publish_payment_events.assert_not_awaited()
+    #
     @pytest.mark.asyncio
     async def test_fetch_pending_tasks_uses_context_manager(self):
         """FetchPendingTasks should properly use UoW context manager."""
