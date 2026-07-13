@@ -9,7 +9,22 @@ from shared.domain.value_object import ValueObject
 @dataclass(frozen=True, slots=True, repr=True)
 class Metadata(ValueObject[MappingProxyType[str, Any]]):
     """
-    Metadata represents JSON object which stores additional info for Payment
+    Represents immutable metadata as a read-only dictionary of JSON-serializable values.
+
+    Wraps arbitrary JSON-compatible data (strings, numbers, booleans, lists, dicts)
+    as an immutable MappingProxyType.
+    All keys must be strings to ensure JSON serialization compatibility.
+
+    Attributes:
+        meta: dict[str, Any] | MappingProxyType[str, Any]
+            Additional metadata for a payment. Accepts plain dicts on input
+            (automatically converted to MappingProxyType) or existing MappingProxyType
+            objects. All keys must be strings.
+
+    Raises:
+        DomainTypeError: If meta is not a dict/MappingProxyType, or if any
+                         key is not a string.
+
     """
 
     meta: dict[str, Any] | MappingProxyType[str, Any] = field(

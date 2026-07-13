@@ -11,7 +11,28 @@ from shared.domain.errors import DomainResourceExistsError
 
 class PaymentService:
     """
-    Combine presistance with domain rules and events
+    Domain service orchestrating payment creation, processing, and persistence.
+
+    Combines repository access with domain rules and event handling to provide
+    high-level payment operations. Acts as the primary entry point for payment
+    business logic, enforcing idempotency and coordinating with infrastructure.
+
+    Responsibilities:
+        - Create new payments with idempotency checks
+        - Update payment status after processing by gateway
+        - Emit and persist domain events
+        - Enforce business rules (e.g., no duplicate payments)
+    Args:
+        repo: PaymentRepository
+            The persistence layer for loading and saving payments.
+    Attributes:
+        repo: PaymentRepository
+            Reference to the repository for payment I/O.
+    Methods:
+        create() -> Payment
+            Create and persist a new payment with idempotency.
+        update_processed_payment() -> Payment
+            Update payment state after gateway processing and persist.
     """
 
     def __init__(self, repo: PaymentRepository):
@@ -27,8 +48,30 @@ class PaymentService:
         webhook_url: WebhookUrl,
     ) -> Payment:
         """
-        Pre-check existance by indempotency key - if not found
-        new Payment created and saving
+        Create a new payment with automatic idempotency deduplication.
+
+        Checks if a payment with the given idempotency key already exists.
+        Args:
+            amount: Amount
+                The monetary amount to charge (must be positive, ≤ 2 decimal places).
+            currency: Currency
+                The currency of the transaction (RUB, USD, EUR).
+            description: Description
+                A human-readable description of the payment (3-50 chars, no control chars).
+            metadata: Metadata
+                Optional JSON-serializable metadata
+            key: IdempotencyKey
+                UUID v4 for deduplication.
+            webhook_url: WebhookUrl
+                The endpoint to POST payment status updates to after processing.
+
+        Returns:
+            Payment
+                The newly created Payment aggregate, persisted in the repository.
+
+        Raises:
+            DomainResourceExistsError
+                If a payment with the given idempotency key already exists.
         """
 
         payment_exists = await self.repo.get_by_key(key)
@@ -51,7 +94,20 @@ class PaymentService:
 
     async def update_processed_payment(self, payment: Payment) -> Payment:
         """
-        Wrapper for payment status and process_time updates
+        Update a payment after processing by the payment gateway.
+
+        Persists status changes and processing metadata (e.g., processed_at timestamp,
+        final status CONFIRMED/FAILED, failure reason) to the repository. This method
+        is called after the payment gateway returns a processing result.
+        Args:
+            payment: Payment
+                An existing Payment aggregate that has been processed and updated
+                with new status and timing information.
+        Returns:
+            Payment
+                The updated Payment aggregate (same instance as input).
+        Raises
+            DomainResourrceNotFoundError(internal)
         """
         await self.repo.update(payment=payment)
         return payment

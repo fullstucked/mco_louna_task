@@ -114,7 +114,7 @@ class Payment(Aggregate[PaymentID, PaymentDomainEvent, ValueObject, Entity]):
         events: list[PaymentDomainEvent] | None = None,
     ) -> Self:
         """
-        Rebuild Payment aggregate from persisted state (event sourcing).
+        Rebuild Payment aggregate from persisted state.
 
         Reconstructs the aggregate from historical state without recording
         a new creation event. Business rule validation still applies.
@@ -130,7 +130,7 @@ class Payment(Aggregate[PaymentID, PaymentDomainEvent, ValueObject, Entity]):
             status: Current payment status
             created_at: Payment creation timestamp
             processed_at: Payment processing timestamp (if processed)
-            events: Historical domain events (defaults to empty list)
+            events: domain events (defaults to empty list)
 
         Returns:
             Reconstructed Payment aggregate with optional events

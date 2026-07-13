@@ -9,9 +9,20 @@ from shared.domain.value_object import ValueObject
 @dataclass(frozen=True, slots=True, repr=True, eq=False)
 class Amount(ValueObject[Decimal]):
     """
-    Class represent imutable count of money which should be processed
-    via gatway;
-    `Decimal` for precise value
+    Represents an immutable amount for payment processing.
+
+    Uses Decimal type for precise calculations,
+    Enforces strict constraints:
+    amounts must be positive and limited to 2 decimal places (cents).
+
+    Attributes:
+        amount: Decimal
+            The monetary value to be processed. Must be positive and
+            contain at most 2 decimal places (e.g., 99.99, 10.50).
+
+    Raises:
+        DomainTypeError: If amount is not a Decimal instance.
+        DomainValidationError: If amount <= 0 or has > 2 decimal places.
     """
 
     amount: Decimal = field(metadata={"value_field": True})

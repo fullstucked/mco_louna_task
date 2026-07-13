@@ -9,7 +9,15 @@ from shared.domain.value_object import ValueObject
 @dataclass(frozen=True, slots=True)
 class Timestamp(ValueObject[datetime]):
     """
-    Represent datetime object, timezone awared
+    Represents an immutable, timezone-aware datetime for payment events.
+
+    Attributes:
+        timestamp: datetime
+            A timezone-aware datetime object (tzinfo must be set).
+
+    Raises:
+        DomainTypeError: If timestamp is not a datetime, or lacks timezone info.
+
     """
 
     timestamp: datetime = field(

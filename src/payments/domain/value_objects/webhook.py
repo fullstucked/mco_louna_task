@@ -12,7 +12,22 @@ from shared.domain.value_object import ValueObject
 @dataclass(frozen=True, slots=True, repr=False)
 class WebhookUrl(ValueObject[str]):
     """
-    Represents URL which should accept notifications about payment changes
+    Represents a validated webhook URL for payment change notifications.
+
+    Encapsulates a URL endpoint that receives POST notifications when a
+    payment changes state. Validates that the URL:
+    - Uses secure (https) or plain (http) protocols
+    - Does not point to localhost or local network addresses
+    - Is syntactically valid according to URL standards
+
+    Attributes:
+        url: str
+            An HTTP or HTTPS URL that will receive webhook notifications.
+            Must be a valid, public-facing URL; localhost/127.0.0.1 not allowed.
+
+    Raises:
+        DomainValidationError: If URL scheme is not http/https, points to
+                               localhost/127.0.0.1, or is syntactically invalid.
     """
 
     url: str = field(metadata={"value_field": True})

@@ -9,7 +9,17 @@ from shared.domain.value_object import ValueObject
 @dataclass(frozen=True, slots=True, repr=False)
 class IdempotencyKey(ValueObject[UUID]):
     """
-    Payment Idemporency key should prevent duplicates
+    Represents an idempotency key to prevent duplicate payment processing.
+
+    Uses UUID v4 to provide a globally unique, non-predictable key preventing
+    duplicates or user violations.
+
+    Attributes:
+        key: UUID
+
+    Raises:
+        DomainTypeError: If key is not UUID v4.
+
     """
 
     key: UUID = field(metadata={"value_field": True})

@@ -17,6 +17,26 @@ INVALID_PATTERN = r"[\n\r\t\x00-\x08\x0b-\x0c\x0e-\x1f\x7f]"
 
 @dataclass(frozen=True, slots=True, repr=True)
 class Description(ValueObject[str]):
+    """
+    Represents a text description for a payment.
+
+    Enforces minimum and maximum length constraints,
+    prohibits control
+    characters (newlines, tabs, null bytes, etc.) to ensure descriptions
+    are suitable for storage, display, and serialization in JSON and other
+    formats.
+
+    Attributes:
+        text: str
+            The description text. Must be between 3 and 50 characters (inclusive)
+            and cannot contain control characters.
+
+    Raises:
+        DomainValidationError: If length is outside [3, 50] or contains
+        invalid characters (\\n, \\r, \\t, null bytes, etc.).
+
+    """
+
     text: str = field(metadata={"value_field": True})
 
     def __post_init__(self):
