@@ -42,6 +42,18 @@ logger = get_logger()
 
 
 class CreatePaymentUseCase:
+    """
+    Creates a new payment aggregate with idempotency guarantees.
+
+    Flow:
+        1. Convert command DTO to value objects
+        2. Create Payment aggregate (idempotency check via key)
+        3. Extract events, add to outbox, commit transaction
+        4. Publish events to event bus (outside transaction)
+        5. Return response DTO
+
+    If event publishing fails, events remain in outbox for async retry.
+    """
 
     async def __call__(
         self,
@@ -49,6 +61,17 @@ class CreatePaymentUseCase:
         uow: PaymentUoW,
         event_bus: PaymentEventBus,
     ) -> "CreatePaymentResponse":
+        """
+        Execute payment creation.
+        Args:
+            command: CreatePaymentCommand
+            uow: PaymentUoW (caller opens transaction)
+            event_bus: PaymentEventBus for external notifications
+        Returns:
+            CreatePaymentResponse
+        Raises:
+            PublisherUnavailableError, EventRoutingError, EventSerializationError
+        """
 
         # Building value objects from command DTO
         amount = Amount(command.amount)
@@ -93,7 +116,12 @@ class CreatePaymentUseCase:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CreatePaymentResponse:
     """
-    DTO for response to payment creating command
+    Response DTO on successful payment creation.
+
+    Attributes:
+        payment_id: Unique payment identifier (str)
+        status: Current payment status (PaymentStatus)
+        created_at: Server timestamp (datetime)
     """
 
     payment_id: str

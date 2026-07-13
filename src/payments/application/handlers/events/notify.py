@@ -10,7 +10,12 @@ logger = get_logger()
 
 
 class SendNotificationUseCase:
-    """Send webhook notifications for payment events."""
+    """
+    Send webhook notifications for payment status updates.
+
+    Consumes PaymentProcessedEvent, builds status-specific payload via
+    strategy pattern, and delivers via WebhookSender interface.
+    """
 
     DEFAULT_TIMEOUT = 5
 
@@ -25,11 +30,19 @@ class SendNotificationUseCase:
     ) -> None:
         """
         Send notification to webhook URL.
-
+        Flow:
+            1. Resolve timeout (provided or DEFAULT_TIMEOUT)
+            2. Fetch strategy based on event.status
+            3. Build payload via strategy.build(event)
+            4. Send via notifier.send(url, payload, timeout)
         Args:
-            notifier: Implementation of WebhookSender interface
-            event: PaymentProcessedEvent with status and details
+            notifier: WebhookSender implementation
+            event: PaymentProcessedEvent with status, payment_id, webhook_url
             timeout: Request timeout in seconds (default: 5)
+        Raises:
+            WebhookUrlInvalidError: Protocol unsupported by notifier
+            WebhookPayloadError: Payload structure incompatible with notifier
+            WebhookSenderUnavailableError: Network/service unavailable
         """
         timeout = timeout if timeout is not None else self.DEFAULT_TIMEOUT
 

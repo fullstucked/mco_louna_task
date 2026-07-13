@@ -14,20 +14,38 @@ from payments.domain.value_objects.id import PaymentID
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GetPaymentQuery:
     """
-    DTO query to get `Payment` instance by it's `id`
+    Query DTO to fetch a payment by ID.
+    Args:
+        id: Payment ID (UUID)
     """
 
     id: UUID
 
 
 class GetPayment:
+    """
+    Fetches payment details by ID.
+    Flow:
+        1. Convert query DTO to PaymentID value object
+        2. Query repository for payment
+        3. Convert aggregate to response DTO
+    """
 
     async def __call__(
         self,
         query: GetPaymentQuery,
         uow: PaymentUoW,
     ) -> "GetPaymentQueryResponse":
-
+        """
+        Execute payment fetch query.
+        Args:
+            query: GetPaymentQuery
+            uow: PaymentUoW (caller opens transaction)
+        Returns:
+            GetPaymentQueryResponse
+        Raises:
+            PaymentNotFoundError
+        """
         # Building value objects from command
         id = PaymentID(query.id)
 
@@ -41,9 +59,18 @@ class GetPayment:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class GetPaymentQueryResponse:
     """
-    DTO for response to payment creating command
+    Response DTO with full payment details.
+    Attributes:
+        payment_id: Unique payment ID (UUID)
+        amount: Payment amount (Decimal)
+        currency: ISO 4217 currency code (Currency)
+        description: Payment description (str)
+        key: Idempotency key (UUID)
+        metadata: Tracking metadata (dict)
+        status: Current payment status (PaymentStatus)
+        created_at: Creation timestamp (datetime)
+        processed_at: Processing timestamp or None if not processed (datetime | None)
     """
-
     payment_id: UUID
     amount: Decimal
     currency: Currency

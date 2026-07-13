@@ -12,13 +12,29 @@ logger = get_logger()
 
 
 class FetchPendingTasks:
-    """ """
+    """
+    Background task processor for pending payment events.
+
+    Polls outbox for unprocessed events and publishes them via event bus.
+    Handles publisher failures gracefully—events remain PENDING for retry.
+
+    Intended to run periodically (e.g., every 5-30 seconds) to ensure
+    eventual delivery of events to external systems.
+    """
 
     async def __call__(
         self,
         uow: PaymentUoW,
         event_bus: PaymentEventBus,
     ) -> None:
+        """
+        Fetch and publish pending events.
+        Args:
+            uow: PaymentUoW for outbox repository access
+            event_bus: PaymentEventBus for external notifications
+        Raises:
+            PublisherUnavailableError, EventRoutingError, EventSerializationError
+        """
         async with uow:
             events = await uow.outbox.get_pendings()
             if events:
